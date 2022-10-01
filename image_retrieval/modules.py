@@ -1,17 +1,17 @@
 import pytorch_lightning as pl
 import torch
 import torchmetrics
-from timm import create_model
 from torchtyping import TensorType
 
 
 class ClassificationModule(pl.LightningModule):
-    def __init__(self, lr=1e-3, debug=False):
+    def __init__(self, model: torch.nn.Module, lr=1e-3, debug=False):
         super().__init__()
         self.lr = lr
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.acc_fn = torchmetrics.Accuracy()
-        self.model = create_model("convnext_nano", pretrained=not (debug))
+        self.model = model
+        self.debug = debug
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
         return self.model(x)

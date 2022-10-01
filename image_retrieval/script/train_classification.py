@@ -4,6 +4,7 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from typer import Typer
 
 from image_retrieval.data import CIFAR100
+from image_retrieval.models import ConvNext
 from image_retrieval.modules import ClassificationModule
 
 app = Typer(pretty_exceptions_enable=False)
@@ -23,7 +24,9 @@ def train(
     data = CIFAR100(
         root_path=data_path, batch_size=batch_size, num_workers=num_workers, debug=debug
     )
-    model = ClassificationModule(debug=debug)
+
+    model = ConvNext(pretrained=not (debug))
+    module = ClassificationModule(model=model, debug=debug)
 
     callbacks = [
         EarlyStopping(monitor="val_loss", mode="min", patience=patience, strict=False),
@@ -42,7 +45,7 @@ def train(
 
     trainer = pl.Trainer(**trainer_args)
 
-    trainer.fit(model, data)
+    trainer.fit(module, data)
 
 
 if __name__ == "__main__":
