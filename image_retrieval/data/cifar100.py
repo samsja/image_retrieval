@@ -16,12 +16,12 @@ class CIFAR100(pl.LightningDataModule):
         self,
         root_path: str,
         batch_size: int = 32,
-        num_workers: int = 0,
+        num_workers: int = 4,
         debug: bool = False,
     ):
         super().__init__()
         self.batch_size = batch_size if not debug else 8
-        self.num_workers = num_workers
+        self.num_workers = num_workers if not debug else 0
         self.data_path = root_path
         self.debug = debug
 

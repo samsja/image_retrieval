@@ -2,6 +2,9 @@
 */data_trash/*
 */lightning_logs/*
 */checkpoints/*
+checkpoints/*
+lightning_logs/*
+data_trash/*
 
 data/*
 flagged/*
@@ -11,8 +14,6 @@ flagged/*
 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
-
-data/*
 
 build/*
 
