@@ -1,6 +1,6 @@
 .idea/*
-
-lightning_logs/*
+*/data_trash/*
+*/lightning_logs/*
 data/*
 flagged/*
 

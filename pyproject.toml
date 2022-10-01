@@ -10,6 +10,8 @@ torch = "^1.0"
 torchvision = "^0.13"
 pytorch-lightning = "^1"
 timm = "^0.6.7"
+torchtyping = "^0.1.4"
+torchmetrics = "^0.9.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7"
