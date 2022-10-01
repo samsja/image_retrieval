@@ -16,3 +16,7 @@ class ConvNext(nn.Module):
         x = self.model.head.global_pool(x)
         x = self.model.head.norm(x)
         return self.model.head.flatten(x)
+
+    def forward_from_features(self, x: TensorType["batch", "F"]) -> TensorType["batch", "L"]:
+        x = self.model.head.drop(x)
+        return self.model.head.fc(x)

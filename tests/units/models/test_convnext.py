@@ -5,7 +5,16 @@ from image_retrieval.models import ConvNext
 
 def test_convnext():
 
-    model = ConvNext(pretrained=False)
+    with torch.no_grad():
 
-    assert model(torch.zeros(10, 3, 224, 224)).shape == (10, 1000)
-    assert model.forward_features(torch.zeros(10, 3, 224, 224)).shape == (10, 640)
+        model = ConvNext(pretrained=False)
+
+        inputs = torch.zeros(10, 3, 224, 224)
+
+        features = model.forward_features(inputs)
+        outputs = model(inputs)
+
+        assert outputs.shape == (10, 1000)
+
+        assert features.shape == (10, 640)
+        assert (model.forward_from_features(features) == outputs).all()
