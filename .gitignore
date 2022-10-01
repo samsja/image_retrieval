@@ -1,6 +1,8 @@
 .idea/*
 */data_trash/*
 */lightning_logs/*
+*/checkpoints/*
+
 data/*
 flagged/*
 
@@ -19,3 +21,4 @@ build/*
 *.log
 
 *.png
+
