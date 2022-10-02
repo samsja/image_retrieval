@@ -21,12 +21,10 @@ def train(
     debug: bool = False,
 ):
 
-    data = CIFAR100(
-        root_path=data_path, batch_size=batch_size, num_workers=num_workers, debug=debug
-    )
+    data = CIFAR100(root_path=data_path, batch_size=batch_size, num_workers=num_workers, debug=debug)
 
     model = ConvNext(pretrained=not (debug))
-    module = ClassificationModule(model=model, debug=debug)
+    module = ClassificationModule(model, data, debug=debug)
 
     callbacks = [
         EarlyStopping(monitor="val_loss", mode="min", patience=patience, strict=False),

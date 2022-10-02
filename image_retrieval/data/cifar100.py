@@ -42,6 +42,14 @@ class CIFAR100(pl.LightningDataModule):
             transform=get_transforms(_IMAGE_SHAPE_VAL, augmentation=False),
             train=False,
         )
+        self.test_dataset, self.query_dataset = torch.utils.data.random_split(
+            self.test_dataset,
+            [
+                len(self.test_dataset) - 100,
+                100,
+            ],
+            generator=torch.Generator().manual_seed(42),
+        )
 
         if self.debug:
             for dataset in [self.train_dataset, self.test_dataset]:
@@ -67,6 +75,14 @@ class CIFAR100(pl.LightningDataModule):
     def test_dataloader(self):
         return DataLoader(
             self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=True,
+        )
+
+    def query_dataloader(self):
+        return DataLoader(
+            self.query_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=True,
