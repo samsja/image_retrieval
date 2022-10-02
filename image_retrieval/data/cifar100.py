@@ -45,7 +45,7 @@ class CIFAR100(pl.LightningDataModule):
 
         if self.debug:
             for dataset in [self.train_dataset, self.test_dataset]:
-                dataset.data = dataset.data[0 : self.batch_size]
+                dataset.__class__ = _debug_dataset(self.batch_size, dataset.__class__)
 
     def train_dataloader(self):
         return DataLoader(
@@ -71,3 +71,11 @@ class CIFAR100(pl.LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=True,
         )
+
+
+def _debug_dataset(max_len: int, origin_class):
+    class _DebugDataset(origin_class):
+        def __len__(self):
+            return max_len
+
+    return _DebugDataset
