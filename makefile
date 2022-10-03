@@ -9,8 +9,9 @@ notebook-sync:
 	jupytext --sync  notebooks/*.ipynb
 
 
-clean_log:
+clean:
 	rm -rf lightning_logs
+	rm -rf checkpoints
 
 tensorboard:
 	tensorboard --logdir ./lightning_logs
