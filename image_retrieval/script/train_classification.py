@@ -1,6 +1,8 @@
 import pytorch_lightning as pl
+import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.loggers import WandbLogger
 from typer import Typer
 
 from image_retrieval.data import CIFAR100
@@ -33,11 +35,21 @@ def train(
         ModelCheckpoint(dirpath=checkpoint_path),
     ]
 
+    if debug:
+        wandb.init(mode="disabled")
+
+    wandb_logger = WandbLogger(project="image_retrieval", save_dir="lightning_logs")
+
+    wandb_logger.experiment.config["lr"] = lr
+    wandb_logger.experiment.config["batch_size"] = batch_size
+    wandb_logger.experiment.config["convnext_size"] = convnext_size
+
     trainer_args = {
         "gpus": 1,
         "max_epochs": epoch,
         "precision": 16,
         "callbacks": callbacks,
+        "logger": wandb_logger,
     }
 
     if debug:
