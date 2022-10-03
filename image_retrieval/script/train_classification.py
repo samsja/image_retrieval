@@ -45,7 +45,8 @@ def train(
     wandb_logger.experiment.config["convnext_size"] = convnext_size
 
     trainer_args = {
-        "gpus": 1,
+        "accelerator": "gpu",
+        "devices": 1,
         "max_epochs": epoch,
         "precision": 16,
         "callbacks": callbacks,
