@@ -17,6 +17,7 @@ def train(
     num_workers: int = 4,
     data_path: str = "data_trash",
     checkpoint_path: str = "checkpoints",
+    lr: float = 1e-3,
     convnext_size: str = "nano",
     patience: int = 10,
     debug: bool = False,
@@ -25,7 +26,7 @@ def train(
     data = CIFAR100(root_path=data_path, batch_size=batch_size, num_workers=num_workers, debug=debug)
 
     model = ConvNext(pretrained=not (debug), size=convnext_size)
-    module = ClassificationModule(model, data, debug=debug)
+    module = ClassificationModule(model, data, lr, debug=debug)
 
     callbacks = [
         EarlyStopping(monitor="val_loss", mode="min", patience=patience, strict=False),
