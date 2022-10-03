@@ -17,13 +17,14 @@ def train(
     num_workers: int = 4,
     data_path: str = "data_trash",
     checkpoint_path: str = "checkpoints",
+    convnext_size: str = "nano",
     patience: int = 10,
     debug: bool = False,
 ):
 
     data = CIFAR100(root_path=data_path, batch_size=batch_size, num_workers=num_workers, debug=debug)
 
-    model = ConvNext(pretrained=not (debug))
+    model = ConvNext(pretrained=not (debug), size=convnext_size)
     module = ClassificationModule(model, data, debug=debug)
 
     callbacks = [

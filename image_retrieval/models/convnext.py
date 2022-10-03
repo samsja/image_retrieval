@@ -4,9 +4,9 @@ from torchtyping import TensorType
 
 
 class ConvNext(nn.Module):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, size="nano", *args, **kwargs):
         super().__init__()
-        self.model = create_model("convnext_nano", *args, **kwargs)
+        self.model = create_model(f"convnext_{size}", *args, **kwargs)
 
     def forward(self, x: TensorType["batch", 3, "H", "W"]) -> TensorType["batch", "L"]:
         return self.model(x)
