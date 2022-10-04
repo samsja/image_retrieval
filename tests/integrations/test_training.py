@@ -1,6 +1,6 @@
 import pytest
 
-from image_retrieval.script.train_classification import train
+from image_retrieval.script.train import train
 
 
 @pytest.mark.parametrize("module", ["ClassificationModule", "MetricLearningModule"])

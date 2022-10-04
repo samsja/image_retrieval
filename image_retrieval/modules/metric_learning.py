@@ -20,7 +20,7 @@ class MetricLearningModule(pl.LightningModule):
         self.query_labels = None
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        return self.model(x)
+        return self.model.forward_features(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch

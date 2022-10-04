@@ -6,5 +6,5 @@ Small experiment for image retrieval with metric learning and other approach
 ## How to use it ?
 
 ```bash
-python image_retrieval/script/train_classification.py 10 
+python image_retrieval/script/train.py 10 
 ```
