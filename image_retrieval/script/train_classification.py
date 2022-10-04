@@ -1,3 +1,5 @@
+from importlib import import_module
+
 import pytorch_lightning as pl
 import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -7,7 +9,6 @@ from typer import Typer
 
 from image_retrieval.data import CIFAR100
 from image_retrieval.models import ConvNext
-from image_retrieval.modules import ClassificationModule
 
 app = Typer(pretty_exceptions_enable=False)
 
@@ -17,6 +18,7 @@ def train(
     epoch: int,
     batch_size: int = 32,
     num_workers: int = 4,
+    module: str = "ClassificationModule",
     data_path: str = "data_trash",
     checkpoint_path: str = "checkpoints",
     lr: float = 1e-3,
@@ -28,7 +30,9 @@ def train(
     data = CIFAR100(root_path=data_path, batch_size=batch_size, num_workers=num_workers, debug=debug)
 
     model = ConvNext(pretrained=not (debug), size=convnext_size)
-    module = ClassificationModule(model, data, lr, debug=debug)
+
+    module_class = getattr(import_module("image_retrieval.modules"), module)
+    module = module_class(model, data, lr, debug=debug)
 
     callbacks = [
         EarlyStopping(monitor="val_loss", mode="min", patience=patience, strict=False),
@@ -43,6 +47,7 @@ def train(
     wandb_logger.experiment.config["lr"] = lr
     wandb_logger.experiment.config["batch_size"] = batch_size
     wandb_logger.experiment.config["convnext_size"] = convnext_size
+    wandb_logger.experiment.config["module"] = module
 
     trainer_args = {
         "accelerator": "gpu",
