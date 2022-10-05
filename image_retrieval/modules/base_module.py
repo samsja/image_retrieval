@@ -1,8 +1,29 @@
+import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
 from torchmetrics.functional import retrieval_average_precision
 
 from image_retrieval.metrics import cosine_sim
+
+
+class BaseRetrievalModule(pl.LightningModule):
+    def __init__(self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False):
+        super().__init__()
+        self.lr = lr
+        self.model = model
+        self.debug = debug
+        self.data = data
+
+        self.retrieval_metrics = RetrievalHelper()
+
+    def on_validation_start(self) -> None:
+        self.retrieval_metrics.on_validation_start(self.data.query_dataloader(), self.device, self.model)
+
+    def on_validation_epoch_end(self) -> None:
+        self.log("val_map", self.retrieval_metrics.on_validation_epoch_end())
+
+    def configure_optimizers(self):
+        return torch.optim.AdamW(self.model.parameters(), lr=self.lr)
 
 
 class RetrievalHelper:
