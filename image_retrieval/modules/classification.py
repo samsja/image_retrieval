@@ -1,10 +1,9 @@
 import pytorch_lightning as pl
 import torch
 import torchmetrics
-from torchmetrics.functional import retrieval_average_precision
 from torchtyping import TensorType
 
-from image_retrieval.metrics import cosine_sim
+from image_retrieval.modules.helper import RetrievalHelper
 
 
 class ClassificationModule(pl.LightningModule):
@@ -17,8 +16,7 @@ class ClassificationModule(pl.LightningModule):
         self.debug = debug
         self.data = data
 
-        self.query_embeddings = None
-        self.query_labels = None
+        self.retrieval_metrics = RetrievalHelper()
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
         return self.model(x)
@@ -35,17 +33,7 @@ class ClassificationModule(pl.LightningModule):
         return loss
 
     def on_validation_start(self) -> None:
-        query_embeddings = []
-        query_labels = []
-        for images, labels in self.data.query_dataloader():
-            images = images.to(self.device)
-            query_embeddings.append(self.model.forward_features(images))
-            query_labels.append(labels)
-
-        self.query_embeddings = torch.concat(query_embeddings)
-        self.query_labels = torch.concat(query_labels)
-        self.val_sim = []
-        self.val_labels = []
+        self.retrieval_metrics.on_validation_start(self.data.query_dataloader(), self.device, self.model)
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -57,22 +45,10 @@ class ClassificationModule(pl.LightningModule):
         self.log("val_loss", loss)
         self.log("val_acc", acc)
 
-        self.val_sim.append(cosine_sim(self.query_embeddings, features))
-        self.val_labels.append(y)
+        self.retrieval_metrics.validation_add_features(features, y)
 
     def on_validation_epoch_end(self) -> None:
-        self.val_sim = torch.concat(self.val_sim, dim=1)
-        self.val_labels = torch.concat(self.val_labels)
-
-        preds = torch.stack([label == self.val_labels for label in self.query_labels])
-        map = retrieval_average_precision(self.val_sim, preds)
-        self.log("val_map", map)
-
-    def on_validation_end(self) -> None:
-        del self.query_embeddings
-        del self.query_labels
-        self.query_embeddings = None
-        self.query_labels = None
+        self.log("val_map", self.retrieval_metrics.on_validation_epoch_end())
 
     def test_step(self, batch, batch_idx):
         x, y = batch
