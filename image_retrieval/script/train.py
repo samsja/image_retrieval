@@ -18,7 +18,7 @@ def train(
     epoch: int,
     batch_size: int = 32,
     num_workers: int = 4,
-    module: str = "ClassificationModule",
+    module: str = "SoftMaxModule",
     data_path: str = "data_trash",
     checkpoint_path: str = "checkpoints",
     lr: float = 1e-3,

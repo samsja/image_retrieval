@@ -6,7 +6,7 @@ from torchtyping import TensorType
 from image_retrieval.modules.base_module import BaseRetrievalModule
 
 
-class ClassificationModule(BaseRetrievalModule):
+class SoftMaxModule(BaseRetrievalModule):
     def __init__(self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False):
         super().__init__(model, data, lr, debug)
 

@@ -88,6 +88,10 @@ class CIFAR100(pl.LightningDataModule):
             pin_memory=True,
         )
 
+    @property
+    def num_classes(self) -> int:
+        return 100
+
 
 def _debug_dataset(max_len: int, origin_class):
     class _DebugDataset(origin_class):
