@@ -33,6 +33,8 @@ class ArcFaceModule(BaseRetrievalModule):
 
         self.log("val_loss", loss)
 
+        features = torch.nn.functional.normalize(features)
+
         self.retrieval_metrics.validation_add_features(features, y)
 
     def test_step(self, batch, batch_idx):
