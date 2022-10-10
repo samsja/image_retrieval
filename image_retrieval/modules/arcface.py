@@ -26,6 +26,13 @@ class ArcFaceModule(BaseRetrievalModule):
 
         return loss
 
+    def on_validation_start(self) -> None:
+        # here we need to normalize the query as well
+        super().on_validation_start()
+        self.retrieval_metrics.query_embeddings = torch.nn.functional.normalize(
+            self.retrieval_metrics.query_embeddings
+        )  #
+
     def validation_step(self, batch, batch_idx):
         x, y = batch
         features = self.model.forward_features(x)
