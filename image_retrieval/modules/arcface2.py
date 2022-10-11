@@ -18,7 +18,7 @@ class NormalizedLinear(nn.Linear):
 
 
 class ArcFaceLoss(nn.Module):
-    def __init__(self, scale=64, margin=28.6) -> None:
+    def __init__(self, scale=1, margin=28.6) -> None:
         super().__init__()
         self.scale = scale
         self.margin = np.radians(margin)
