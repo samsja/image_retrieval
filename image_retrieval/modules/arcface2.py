@@ -1,6 +1,7 @@
 import numpy as np
 import pytorch_lightning as pl
 import torch
+import torchmetrics
 from torch import nn
 from torch.nn import functional as F
 from torchtyping import TensorType
@@ -26,12 +27,11 @@ class ArcFaceLoss(nn.Module):
     def forward(
         self, logits: TensorType["batch", "classes"], labels: TensorType["batches"]
     ) -> TensorType["batch", "classes"]:
-        if not (self.eval()):
-            logits *= self.scale
-            index_to_add_margin = [(i, int(label)) for i, label in enumerate(labels)]
-            value_to_add_margin = logits[index_to_add_margin]
+        logits *= self.scale
+        index_to_add_margin = [(i, int(label)) for i, label in enumerate(labels)]
+        value_to_add_margin = logits[index_to_add_margin]
 
-            logits[index_to_add_margin] = torch.cos(torch.acos(value_to_add_margin) + self.margin)
+        logits[index_to_add_margin] = torch.cos(torch.acos(value_to_add_margin) + self.margin)
 
         return self.cross_entropy(logits, labels)
 
@@ -42,25 +42,31 @@ class ArcFace2Module(BaseRetrievalModule):
 
         self.loss_fn = ArcFaceLoss(data.num_classes, model.embedding_size)
         self.model.model.head.fc = NormalizedLinear(data.num_classes, model.embedding_size)
+        self.acc_fn = torchmetrics.Accuracy()
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        return self.model.forward_features(x)
+        return self.model.forward(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
         output = self.forward(x)
         loss = self.loss_fn(output, y)
+        acc = self.acc_fn(output, y)
 
         self.log("train_loss", loss)
+        self.log("train_acc", acc)
 
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         features = self.model.forward_features(x)
-        loss = self.loss_fn(features, y)
+        output = self.model.forward_from_features(features)
+        loss = self.loss_fn(output, y)
+        acc = self.acc_fn(output, y)
 
         self.log("val_loss", loss)
+        self.log("val_acc", acc)
 
         self.retrieval_metrics.validation_add_features(features, y)
 
