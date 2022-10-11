@@ -27,6 +27,7 @@ class ArcFaceLoss(nn.Module):
     def forward(
         self, logits: TensorType["batch", "classes"], labels: TensorType["batches"]
     ) -> TensorType["batch", "classes"]:
+        print(logits.mean())
         index_to_add_margin = (torch.arange(len(labels)).long().to(labels.device), labels.long())
         value_to_add_margin = logits[index_to_add_margin]
 
