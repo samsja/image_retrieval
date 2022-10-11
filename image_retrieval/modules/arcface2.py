@@ -14,7 +14,7 @@ class NormalizedLinear(nn.Linear):
         super().__init__(in_features, out_features, False, device, dtype)
 
     def forward(self, x: TensorType["batch", "in_features"]) -> TensorType["batch", "out_features"]:
-        return F.linear(F.normalize(x), F.normalize(self.weight), self.bias)
+        return F.linear(F.normalize(x), F.normalize(self.weight).T, self.bias)
 
 
 class ArcFaceLoss(nn.Module):
@@ -27,11 +27,13 @@ class ArcFaceLoss(nn.Module):
     def forward(
         self, logits: TensorType["batch", "classes"], labels: TensorType["batches"]
     ) -> TensorType["batch", "classes"]:
-        logits *= self.scale
-        index_to_add_margin = [(i, int(label)) for i, label in enumerate(labels)]
+        index_to_add_margin = (torch.arange(len(labels)).long().to(labels.device), labels.long())
         value_to_add_margin = logits[index_to_add_margin]
 
-        logits[index_to_add_margin] = torch.cos(torch.acos(value_to_add_margin) + self.margin)
+        x = torch.cos(torch.acos(value_to_add_margin) + self.margin)
+        print(x.dtype)
+        logits[index_to_add_margin] = x
+        logits *= self.scale
 
         return self.cross_entropy(logits, labels)
 
@@ -62,11 +64,11 @@ class ArcFace2Module(BaseRetrievalModule):
         x, y = batch
         features = self.model.forward_features(x)
         output = self.model.forward_from_features(features)
-        loss = self.loss_fn(output, y)
-        acc = self.acc_fn(output, y)
-
-        self.log("val_loss", loss)
-        self.log("val_acc", acc)
+        # loss = self.loss_fn(output, y)
+        # acc = self.acc_fn(output, y)
+        #
+        # self.log("val_loss", loss)
+        # self.log("val_acc", acc)
 
         self.retrieval_metrics.validation_add_features(features, y)
 
