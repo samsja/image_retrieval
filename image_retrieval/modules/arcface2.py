@@ -30,9 +30,7 @@ class ArcFaceLoss(nn.Module):
         index_to_add_margin = (torch.arange(len(labels)).long().to(labels.device), labels.long())
         value_to_add_margin = logits[index_to_add_margin]
 
-        x = torch.cos(torch.acos(value_to_add_margin) + self.margin)
-        print(x.dtype)
-        logits[index_to_add_margin] = x
+        logits[index_to_add_margin] = torch.cos(torch.acos(value_to_add_margin) + self.margin).half()
         logits *= self.scale
 
         return self.cross_entropy(logits, labels)
