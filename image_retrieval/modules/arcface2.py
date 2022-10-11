@@ -45,7 +45,8 @@ class ArcFace2Module(BaseRetrievalModule):
         self.acc_fn = torchmetrics.Accuracy()
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        return self.model.forward(x)
+        x = self.model.forward_features(x)
+        return self.model.model.head.fc(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
