@@ -8,6 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from typer import Typer
 
 from image_retrieval.data import CIFAR100
+from image_retrieval.data.utils_ssl import get_transforms as get_transforms_ssl
 from image_retrieval.models import ConvNext
 
 app = Typer(pretty_exceptions_enable=False)
@@ -24,10 +25,17 @@ def train(
     lr: float = 1e-3,
     convnext_size: str = "nano",
     patience: int = 10,
+    ssl: bool = False,
     debug: bool = False,
 ):
 
-    data = CIFAR100(root_path=data_path, batch_size=batch_size, num_workers=num_workers, debug=debug)
+    data = CIFAR100(
+        root_path=data_path,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        debug=debug,
+        transform=get_transforms_ssl if ssl else None,
+    )
 
     model = ConvNext(pretrained=not (debug), size=convnext_size)
 
