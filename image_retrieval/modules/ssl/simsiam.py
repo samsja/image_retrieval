@@ -43,7 +43,7 @@ class SimSiamModule(BaseRetrievalModule):
         return self.model.forward_features(x)
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
+        x, _ = batch
         x1, x2 = x[0], x[1]
 
         z1 = self.forward(x1)
