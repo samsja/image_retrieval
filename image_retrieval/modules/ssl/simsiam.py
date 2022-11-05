@@ -59,10 +59,10 @@ class SimSiamModule(BaseRetrievalModule):
         z1 = self.forward(x1)
         z2 = self.forward(x2)
 
-        p1 = self.predictor(z1).detach()
-        p2 = self.predictor(z2).detach()
+        p1 = self.predictor(z1)
+        p2 = self.predictor(z2)
 
-        loss = -(self.loss_fn(p1, z2).mean() + self.loss_fn(p2, z1).mean()) * 0.5
+        loss = -(self.loss_fn(p1, z2.detach()).mean() + self.loss_fn(p2, z1.detach()).mean()) * 0.5
         self.log("train_loss", loss)
 
         return loss
