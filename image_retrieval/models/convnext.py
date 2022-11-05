@@ -6,7 +6,7 @@ from torchtyping import TensorType
 class ConvNext(nn.Module):
     _embedding_size = {"nano": 640, "tiny": 768}
 
-    def __init__(self, size="nano", *args, **kwargs):
+    def __init__(self, size="nano", no_head=False, *args, **kwargs):
         super().__init__()
         self.model = create_model(f"convnext_{size}", *args, **kwargs)
         self.embedding_size = ConvNext._embedding_size[size]

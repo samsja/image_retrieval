@@ -9,38 +9,48 @@ from torchtyping import TensorType
 from image_retrieval.modules.base_module import BaseRetrievalModule
 
 
-class Encoder(nn.Module):
-    def __init__(self, out_dim):
-        super().__init__()
-        self.linear1 = nn.Linear(in_features=out_dim, out_features=out_dim)
-        self.bn1 = nn.BatchNorm1d(out_dim)
-
-        self.linear2 = nn.Linear(in_features=out_dim, out_features=out_dim)
-        self.bn2 = nn.BatchNorm1d(out_dim)
-
-        self.linear3 = nn.Linear(in_features=out_dim, out_features=out_dim)
-
-    def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        x = F.relu(self.bn1(self.linear1(x)))
-        x = F.relu(self.bn2(self.linear2(x)))
-        x = F.relu(self.linear3(x))
-        return x
-
-
 class SimSiamModule(BaseRetrievalModule):
     """
     SimSiam implementation (self supervised learning):
     https://arxiv.org/abs/2011.10566
     """
 
-    def __init__(self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False):
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        data: pl.LightningDataModule,
+        lr=1e-3,
+        pred_dim=512,
+        dim=1024,
+        debug=False,
+    ):
         super().__init__(model, data, lr, debug)
 
-        self.encoder = Encoder(self.model.embedding_size)
+        prev_dim = self.model.embedding_size
+
+        self.encoder_head = nn.Sequential(
+            nn.Linear(prev_dim, prev_dim, bias=False),
+            nn.BatchNorm1d(prev_dim),
+            nn.ReLU(inplace=True),  # first layer
+            nn.Linear(prev_dim, prev_dim, bias=False),
+            nn.BatchNorm1d(prev_dim),
+            nn.ReLU(inplace=True),  # second layer
+            nn.Linear(prev_dim, dim),
+            nn.BatchNorm1d(dim, affine=False),
+        )  # output layer
+
+        self.predictor = nn.Sequential(
+            nn.Linear(dim, pred_dim, bias=False),
+            nn.BatchNorm1d(pred_dim),
+            nn.ReLU(inplace=True),  # hidden layer
+            nn.Linear(pred_dim, dim),
+        )  # output layer
+
         self.loss_fn = nn.CosineSimilarity(dim=1)
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        return self.model.forward_features(x)
+        x = self.model.forward_features(x)
+        return self.encoder_head(x)
 
     def training_step(self, batch, batch_idx):
         x, _ = batch
@@ -49,8 +59,8 @@ class SimSiamModule(BaseRetrievalModule):
         z1 = self.forward(x1)
         z2 = self.forward(x2)
 
-        p1 = self.encoder(z1).detach()
-        p2 = self.encoder(z2).detach()
+        p1 = self.predictor(z1).detach()
+        p2 = self.predictor(z2).detach()
 
         loss = -(self.loss_fn(p1, z2).mean() + self.loss_fn(p2, z1).mean()) * 0.5
         self.log("train_loss", loss)
@@ -66,4 +76,7 @@ class SimSiamModule(BaseRetrievalModule):
         pass
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(chain(self.model.parameters(), self.encoder.parameters()), lr=self.lr)
+        return torch.optim.AdamW(
+            chain(self.model.parameters(), self.encoder_head.parameters(), self.predictor.parameters()),
+            lr=self.lr,
+        )
