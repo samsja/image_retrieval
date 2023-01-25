@@ -30,13 +30,15 @@ class GaussianBlur(object):
         x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
         return x
 
+MEAN = [0.485, 0.456, 0.406]
+STD = [0.229, 0.224, 0.225]
 
 def get_transforms(image_shape: Tuple[int, int], augmentation=True) -> Callable:
     """get basic transformation
     :param image_shape: shape of the image when resizing
     :param augmentation: include augmentation
     """
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    normalize = transforms.Normalize(mean=MEAN, std= STD)
 
     resize = (
         RandomResizedCropAndInterpolation(size=image_shape)
