@@ -20,7 +20,7 @@ class BaseRetrievalModule(pl.LightningModule):
         self.retrieval_metrics.on_validation_start(self.data.query_dataloader(), self.device, self.model)
 
     def on_validation_epoch_end(self) -> None:
-        self.log("val_map", self.retrieval_metrics.on_validation_epoch_end())
+        self.log("val_map", self.retrieval_metrics.on_validation_epoch_end(), prog_bar=True)
 
     def configure_optimizers(self):
         return torch.optim.AdamW(self.model.parameters(), lr=self.lr)

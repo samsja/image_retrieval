@@ -24,20 +24,32 @@ class SimSiamModule(BaseRetrievalModule):
         dim=1024,
         debug=False,
     ):
-        super().__init__(model, data, lr, debug)
+        class _Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+                prev_dim = model.embedding_size
+                self.head = nn.Sequential(
+                    nn.Linear(prev_dim, prev_dim, bias=False),
+                    nn.BatchNorm1d(prev_dim),
+                    nn.ReLU(inplace=True),  # first layer
+                    nn.Linear(prev_dim, prev_dim, bias=False),
+                    nn.BatchNorm1d(prev_dim),
+                    nn.ReLU(inplace=True),  # second layer
+                    nn.Linear(prev_dim, dim),
+                    nn.BatchNorm1d(dim, affine=False),
+                )  # output layer
 
-        prev_dim = self.model.embedding_size
+                self.model = model
 
-        self.encoder_head = nn.Sequential(
-            nn.Linear(prev_dim, prev_dim, bias=False),
-            nn.BatchNorm1d(prev_dim),
-            nn.ReLU(inplace=True),  # first layer
-            nn.Linear(prev_dim, prev_dim, bias=False),
-            nn.BatchNorm1d(prev_dim),
-            nn.ReLU(inplace=True),  # second layer
-            nn.Linear(prev_dim, dim),
-            nn.BatchNorm1d(dim, affine=False),
-        )  # output layer
+            def forward(self, x):
+                x = self.model.forward_features(x)
+                x = self.head(x)
+                return x
+
+            def forward_features(self, x):
+                return self.forward(x)
+
+        super().__init__(_Model(), data, lr, debug)
 
         self.predictor = nn.Sequential(
             nn.Linear(dim, pred_dim, bias=False),
@@ -50,12 +62,11 @@ class SimSiamModule(BaseRetrievalModule):
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
         x = self.model.forward_features(x)
-        return self.encoder_head(x)
+        return x
 
     def training_step(self, batch, batch_idx):
         x, _ = batch
         x1, x2 = x[0], x[1]
-
         z1 = self.forward(x1)
         z2 = self.forward(x2)
 
@@ -77,6 +88,6 @@ class SimSiamModule(BaseRetrievalModule):
 
     def configure_optimizers(self):
         return torch.optim.AdamW(
-            chain(self.model.parameters(), self.encoder_head.parameters(), self.predictor.parameters()),
+            chain(self.model.parameters(), self.predictor.parameters()),
             lr=self.lr,
         )
