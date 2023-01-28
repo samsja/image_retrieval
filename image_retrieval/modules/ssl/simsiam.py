@@ -7,8 +7,7 @@ from torch import nn
 from torchtyping import TensorType
 
 from image_retrieval.modules.base_module import BaseRetrievalModule
-
-
+from image_retrieval.modules.ssl.simsiam2.resnet import ResNet18
 class SimSiamModule(BaseRetrievalModule):
     """
     SimSiam implementation (self supervised learning):
@@ -21,13 +20,16 @@ class SimSiamModule(BaseRetrievalModule):
         data: pl.LightningDataModule,
         lr=1e-3,
         pred_dim=512,
-        dim=1024,
+        dim=2048,
         debug=False,
     ):
         class _Model(nn.Module):
             def __init__(self):
                 super().__init__()
-                prev_dim = model.embedding_size
+                self.model = ResNet18()
+                prev_dim = self.model.fc.weight.shape[1]
+                self.model.fc = nn.Identity()
+
                 self.head = nn.Sequential(
                     nn.Linear(prev_dim, prev_dim, bias=False),
                     nn.BatchNorm1d(prev_dim),
@@ -39,10 +41,9 @@ class SimSiamModule(BaseRetrievalModule):
                     nn.BatchNorm1d(dim, affine=False),
                 )  # output layer
 
-                self.model = model
 
             def forward(self, x):
-                x = self.model.forward_features(x)
+                x = self.model(x)
                 x = self.head(x)
                 return x
 
@@ -87,7 +88,9 @@ class SimSiamModule(BaseRetrievalModule):
         pass
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(
+        return torch.optim.SGD(
             chain(self.model.parameters(), self.predictor.parameters()),
             lr=self.lr,
+            momentum=0.9,
+            weight_decay=5e-4
         )

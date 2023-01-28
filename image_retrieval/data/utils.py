@@ -2,6 +2,7 @@ from typing import Callable, Tuple
 
 import torchvision
 from timm.data import RandomResizedCropAndInterpolation, rand_augment_transform
+from torchvision import transforms
 
 _MEAN = [0.485, 0.456, 0.406]
 _STD = [0.229, 0.224, 0.225]
