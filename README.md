@@ -1,6 +1,6 @@
 # image_retrieval
 
-Small experiment for image retrieval with metric learning and other approach
+Small framework to conduct experiment for image retrieval with metric learning, softmax and SLL approach
 
 
 ## How to use it ?
