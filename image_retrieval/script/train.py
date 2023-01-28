@@ -17,7 +17,7 @@ def train(
     epoch: int,
     batch_size: int = 32,
     num_workers: int = 4,
-    module: str = "SoftMaxModule",
+    module: str = "MetricLearningModule",
     aug: str = "BasicAugmentation",
     backbone: str = "ConvNextNano",
     data_path: str = "data_trash",
