@@ -18,18 +18,6 @@ class TwoCropsTransform:
         k = self.base_transform(x)
         return [q, k]
 
-
-class GaussianBlur(object):
-    """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
-
-    def __init__(self, sigma=[0.1, 2.0]):
-        self.sigma = sigma
-
-    def __call__(self, x):
-        sigma = random.uniform(self.sigma[0], self.sigma[1])
-        x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
-        return x
-
 MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
 
@@ -38,32 +26,19 @@ def get_transforms(image_shape: Tuple[int, int], augmentation=True) -> Callable:
     :param image_shape: shape of the image when resizing
     :param augmentation: include augmentation
     """
-    normalize = transforms.Normalize(mean=MEAN, std= STD)
-
-    resize = (
-        RandomResizedCropAndInterpolation(size=image_shape)
-        if augmentation
-        else transforms.Resize(image_shape)
-    )
-
-    augmentation_transform = (
-        [
-            transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8),  # not strengthened
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
+    if augmentation:
+        return TwoCropsTransform(transforms.Compose([
+            transforms.RandomResizedCrop(image_shape[0], scale=(0.2, 1.)),
             transforms.RandomHorizontalFlip(),
-        ]
-        if augmentation
-        else []
-    )
-
-    all_transform = transforms.Compose(
-        [
-            resize,
-            *augmentation_transform,
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+            ], p=0.8),
+            transforms.RandomGrayscale(p=0.2),
             transforms.ToTensor(),
-            normalize,
-        ]
-    )
-
-    return TwoCropsTransform(all_transform) if augmentation else all_transform
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        ]))
+    else:
+        return transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
