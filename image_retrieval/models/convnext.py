@@ -4,6 +4,8 @@ from timm import create_model
 from torch import nn
 from torchtyping import TensorType
 
+from .abstract_model import AbstractModel
+
 batch = TypeVar("batch")
 H = TypeVar("H")
 W = TypeVar("W")
@@ -11,27 +13,16 @@ L = TypeVar("L")
 F = TypeVar("F")
 
 
-class ConvNext(nn.Module):
-    _embedding_size = {"nano": 640, "tiny": 768}
-
-    def __init__(self, size="nano", no_head=False, *args, **kwargs):
+class ConvNext(nn.Module, AbstractModel):
+    def __init__(self, size="nano", pretrained=False, *args, **kwargs):
         super().__init__()
-        self.model = create_model(f"convnext_{size}", *args, **kwargs)
-        self.embedding_size = ConvNext._embedding_size[size]
+        self.model = create_model(
+            f"convnext_{size}", num_classes=0, *args, pretrained=pretrained, **kwargs
+        )
 
-    def forward(self, x: TensorType["batch", 3, "H", "W"]) -> TensorType["batch", "L"]:
+    def forward(self, x: TensorType["batch", 3, "H", "W"]) -> TensorType["batch", "F"]:
         return self.model(x)
 
-    def forward_features(
-        self, x: TensorType["batch", 3, "H", "W"]
-    ) -> TensorType["batch", "F"]:
-        x = self.model.forward_features(x)
-        x = self.model.head.global_pool(x)
-        x = self.model.head.norm(x)
-        return self.model.head.flatten(x)
-
-    def forward_from_features(
-        self, x: TensorType["batch", "F"]
-    ) -> TensorType["batch", "L"]:
-        x = self.model.head.drop(x)
-        return self.model.head.fc(x)
+    @property
+    def output_size(self) -> int:
+        return self.model.num_features

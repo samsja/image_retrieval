@@ -16,11 +16,10 @@ class ArcFaceModule(BaseRetrievalModule):
         self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False
     ):
         super().__init__(model, data, lr, debug)
-
-        self.loss_fn = ArcFaceLoss(data.num_classes, model.embedding_size)
+        self.loss_fn = ArcFaceLoss(data.num_classes, model.output_size)
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        return self.model.forward_features(x)
+        return self.model(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -40,7 +39,7 @@ class ArcFaceModule(BaseRetrievalModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        features = self.model.forward_features(x)
+        features = self.model(x)
         loss = self.loss_fn(features, y)
 
         self.log("val_loss", loss)

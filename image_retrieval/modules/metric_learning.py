@@ -18,7 +18,7 @@ class MetricLearningModule(BaseRetrievalModule):
         self.loss_fn = TripletMarginLoss()
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        return self.model.forward_features(x)
+        return self.model(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -30,7 +30,7 @@ class MetricLearningModule(BaseRetrievalModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        features = self.model.forward_features(x)
+        features = self.model(x)
         loss = self.loss_fn(features, y)
 
         self.log("val_loss", loss)

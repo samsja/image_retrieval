@@ -44,7 +44,7 @@ class SimSiamModule(BaseRetrievalModule):
                 self.model = model
 
             def forward(self, x):
-                x = self.model.forward_features(x)
+                x = self.model(x)
                 x = self.head(x)
                 return x
 
@@ -63,7 +63,7 @@ class SimSiamModule(BaseRetrievalModule):
         self.loss_fn = nn.CosineSimilarity(dim=1)
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
-        x = self.model.forward_features(x)
+        x = self.model(x)
         return x
 
     def training_step(self, batch, batch_idx):
@@ -88,7 +88,7 @@ class SimSiamModule(BaseRetrievalModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        features = self.model.forward_features(x)
+        features = self.model(x)
         self.retrieval_metrics.validation_add_features(features, y)
 
     def test_step(self, batch, batch_idx):

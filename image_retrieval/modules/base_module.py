@@ -4,11 +4,12 @@ from torch.utils.data import DataLoader
 from torchmetrics.functional import retrieval_average_precision
 
 from image_retrieval.metrics import cosine_sim
+from image_retrieval.models import AbstractModel
 
 
 class BaseRetrievalModule(pl.LightningModule):
     def __init__(
-        self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False
+        self, model: AbstractModel, data: pl.LightningDataModule, lr=1e-3, debug=False
     ):
         super().__init__()
         self.lr = lr
@@ -44,7 +45,7 @@ class RetrievalHelper:
         query_labels = []
         for images, labels in query_dataloader:
             images = images.to(device)
-            query_embeddings.append(model.forward_features(images))
+            query_embeddings.append(model(images))
             query_labels.append(labels)
 
         self.query_embeddings = torch.concat(query_embeddings)

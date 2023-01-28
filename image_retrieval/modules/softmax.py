@@ -3,30 +3,38 @@ from typing import TypeVar
 import pytorch_lightning as pl
 import torch
 import torchmetrics
+from torch import nn
 from torchtyping import TensorType
 
+from image_retrieval.models import AbstractModel
 from image_retrieval.modules.base_module import BaseRetrievalModule
 
-batch = TypeVar("batch")
+batch_size = TypeVar("batch_size")
 
 
 class SoftMaxModule(BaseRetrievalModule):
     def __init__(
-        self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False
+        self,
+        model: AbstractModel,
+        data: pl.LightningDataModule,
+        lr=1e-3,
+        debug=False,
     ):
         super().__init__(model, data, lr, debug)
 
+        self.fc = nn.Linear(model.output_size, data.num_classes)
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.acc_fn = torchmetrics.Accuracy()
 
-    def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
+    def forward(self, x: TensorType["batch_size":...]) -> TensorType["batch_size":...]:
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        output = self.forward(x)
-        loss = self.loss_fn(output, y)
-        acc = self.acc_fn(output, y)
+        features = self.forward(x)
+        logits = self.fc(features)
+        loss = self.loss_fn(logits, y)
+        acc = self.acc_fn(logits, y)
 
         self.log("train_loss", loss)
         self.log("train_acc", acc)
@@ -35,8 +43,8 @@ class SoftMaxModule(BaseRetrievalModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        features = self.model.forward_features(x)
-        output = self.model.forward_from_features(features)
+        features = self.model(x)
+        output = self.fc(features)
         loss = self.loss_fn(output, y)
         acc = self.acc_fn(output, y)
 
@@ -53,4 +61,4 @@ class SoftMaxModule(BaseRetrievalModule):
         self.log("test_acc", acc)
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.model.parameters(), lr=self.lr)
+        return torch.optim.AdamW(self.parameters(), lr=self.lr)
