@@ -8,7 +8,6 @@ from pytorch_lightning.loggers import WandbLogger
 from typer import Typer
 
 from image_retrieval.data import CIFAR100
-from image_retrieval.models import ConvNext
 
 app = Typer(pretty_exceptions_enable=False)
 
@@ -20,10 +19,10 @@ def train(
     num_workers: int = 4,
     module: str = "SoftMaxModule",
     aug: str = "BasicAugmentation",
+    backbone: str = "ConvNextNano",
     data_path: str = "data_trash",
     checkpoint_path: str = "checkpoints",
     lr: float = 1e-3,
-    convnext_size: str = "nano",
     patience: int = 10,
     pretrained: bool = False,
     debug: bool = False,
@@ -39,11 +38,12 @@ def train(
         transform=augmentation,
     )
 
-    model = ConvNext(pretrained=not debug and pretrained, size=convnext_size)
+    model_cls = getattr(import_module("image_retrieval.models"), backbone)
+    model = model_cls(pretrained=not debug and pretrained)
 
     module_class = getattr(import_module("image_retrieval.modules"), module)
 
-    module = module_class(model, data, lr, debug=debug)
+    module_ = module_class(model, data, lr, debug=debug)
 
     callbacks = [
         EarlyStopping(monitor="val_loss", mode="min", patience=patience, strict=False),
@@ -57,7 +57,7 @@ def train(
 
     wandb_logger.experiment.config["lr"] = lr
     wandb_logger.experiment.config["batch_size"] = batch_size
-    wandb_logger.experiment.config["convnext_size"] = convnext_size
+    wandb_logger.experiment.config["backbone"] = backbone
     wandb_logger.experiment.config["module"] = module
 
     trainer_args = {
@@ -74,7 +74,7 @@ def train(
 
     trainer = pl.Trainer(**trainer_args)
 
-    trainer.fit(module, data)
+    trainer.fit(module_, data)
 
 
 if __name__ == "__main__":

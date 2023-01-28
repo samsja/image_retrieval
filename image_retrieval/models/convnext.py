@@ -26,3 +26,8 @@ class ConvNext(nn.Module, AbstractModel):
     @property
     def output_size(self) -> int:
         return self.model.num_features
+
+
+class ConvNextNano(ConvNext):
+    def __init__(self, pretrained=False, *args, **kwargs):
+        super().__init__("nano", pretrained, *args, **kwargs)
