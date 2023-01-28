@@ -7,7 +7,9 @@ from image_retrieval.metrics import cosine_sim
 
 
 class BaseRetrievalModule(pl.LightningModule):
-    def __init__(self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False):
+    def __init__(
+        self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False
+    ):
         super().__init__()
         self.lr = lr
         self.model = model
@@ -17,10 +19,14 @@ class BaseRetrievalModule(pl.LightningModule):
         self.retrieval_metrics = RetrievalHelper()
 
     def on_validation_start(self) -> None:
-        self.retrieval_metrics.on_validation_start(self.data.query_dataloader(), self.device, self.model)
+        self.retrieval_metrics.on_validation_start(
+            self.data.query_dataloader(), self.device, self.model
+        )
 
     def on_validation_epoch_end(self) -> None:
-        self.log("val_map", self.retrieval_metrics.on_validation_epoch_end(), prog_bar=True)
+        self.log(
+            "val_map", self.retrieval_metrics.on_validation_epoch_end(), prog_bar=True
+        )
 
     def configure_optimizers(self):
         return torch.optim.AdamW(self.model.parameters(), lr=self.lr)

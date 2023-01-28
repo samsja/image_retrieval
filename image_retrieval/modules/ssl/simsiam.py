@@ -1,12 +1,14 @@
 from itertools import chain
+from typing import TypeVar
 
 import pytorch_lightning as pl
 import torch
-import torch.nn.functional as F
 from torch import nn
 from torchtyping import TensorType
 
 from image_retrieval.modules.base_module import BaseRetrievalModule
+
+batch = TypeVar("batch")
 
 
 class SimSiamModule(BaseRetrievalModule):
@@ -73,7 +75,13 @@ class SimSiamModule(BaseRetrievalModule):
         p1 = self.predictor(z1)
         p2 = self.predictor(z2)
 
-        loss = -(self.loss_fn(p1, z2.detach()).mean() + self.loss_fn(p2, z1.detach()).mean()) * 0.5
+        loss = (
+            -(
+                self.loss_fn(p1, z2.detach()).mean()
+                + self.loss_fn(p2, z1.detach()).mean()
+            )
+            * 0.5
+        )
         self.log("train_loss", loss)
 
         return loss

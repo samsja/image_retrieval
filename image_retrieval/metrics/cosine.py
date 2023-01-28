@@ -1,8 +1,16 @@
+from typing import TypeVar
+
 import torch
 from torchtyping import TensorType
 
+X = TypeVar("X")
+Y = TypeVar("Y")
+D = TypeVar("D")
 
-def cosine_sim(a: TensorType["X", "D"], b: TensorType["Y", "D"], eps=1e-8) -> TensorType["X", "Y"]:
+
+def cosine_sim(
+    a: TensorType["X", "D"], b: TensorType["Y", "D"], eps=1e-8
+) -> TensorType["X", "Y"]:
     """
     Compute the cosine similarity of two matrix
 

@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import TypeVar
 
 import pytorch_lightning as pl
 import torch
@@ -7,9 +8,13 @@ from torchtyping import TensorType
 
 from image_retrieval.modules.base_module import BaseRetrievalModule
 
+batch = TypeVar("batch")
+
 
 class ArcFaceModule(BaseRetrievalModule):
-    def __init__(self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False):
+    def __init__(
+        self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False
+    ):
         super().__init__(model, data, lr, debug)
 
         self.loss_fn = ArcFaceLoss(data.num_classes, model.embedding_size)
@@ -48,4 +53,6 @@ class ArcFaceModule(BaseRetrievalModule):
         pass
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(chain(self.model.parameters(), self.loss_fn.parameters()), lr=self.lr)
+        return torch.optim.AdamW(
+            chain(self.model.parameters(), self.loss_fn.parameters()), lr=self.lr
+        )

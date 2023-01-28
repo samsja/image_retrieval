@@ -1,6 +1,14 @@
+from typing import TypeVar
+
 from timm import create_model
 from torch import nn
 from torchtyping import TensorType
+
+batch = TypeVar("batch")
+H = TypeVar("H")
+W = TypeVar("W")
+L = TypeVar("L")
+F = TypeVar("F")
 
 
 class ConvNext(nn.Module):
@@ -14,12 +22,16 @@ class ConvNext(nn.Module):
     def forward(self, x: TensorType["batch", 3, "H", "W"]) -> TensorType["batch", "L"]:
         return self.model(x)
 
-    def forward_features(self, x: TensorType["batch", 3, "H", "W"]) -> TensorType["batch", "F"]:
+    def forward_features(
+        self, x: TensorType["batch", 3, "H", "W"]
+    ) -> TensorType["batch", "F"]:
         x = self.model.forward_features(x)
         x = self.model.head.global_pool(x)
         x = self.model.head.norm(x)
         return self.model.head.flatten(x)
 
-    def forward_from_features(self, x: TensorType["batch", "F"]) -> TensorType["batch", "L"]:
+    def forward_from_features(
+        self, x: TensorType["batch", "F"]
+    ) -> TensorType["batch", "L"]:
         x = self.model.head.drop(x)
         return self.model.head.fc(x)

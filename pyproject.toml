@@ -7,14 +7,13 @@ authors = ["samsja <sami.jaghouar@hotmail.fr>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 torch = "^1.0"
-torchvision = "^0.13"
+torchvision = "^0"
 pytorch-lightning = "^1"
 timm = "^0.6.7"
 torchtyping = "^0.1.4"
 torchmetrics = "^0.9.3"
 typer = "^0.6.1"
-rich = "^12.5.1"
-wandb = "^0.13.3"
+wandb = "^0.13.9"
 pytorch-metric-learning = "^1.6.2"
 
 [tool.poetry.dev-dependencies]
@@ -27,10 +26,8 @@ black = "^22.08"
 isort = "^5"
 pre-commit = "^2"
 jupyterlab = "^3"
+ruff = "^0.0.237"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 110
