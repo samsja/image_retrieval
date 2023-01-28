@@ -6,12 +6,12 @@ import torch
 from torch import nn
 from torchtyping import TensorType
 
-from image_retrieval.modules.base_module import BaseRetrievalModule
+from image_retrieval.modules.base_module import BaseRetrievalMixin
 
 batch = TypeVar("batch")
 
 
-class SimSiamModule(BaseRetrievalModule):
+class SimSiamModule(BaseRetrievalMixin):
     """
     SimSiam implementation (self supervised learning):
     https://arxiv.org/abs/2011.10566
@@ -26,10 +26,12 @@ class SimSiamModule(BaseRetrievalModule):
         dim=1024,
         debug=False,
     ):
+        super().__init__(data, debug)
+
         class _Model(nn.Module):
             def __init__(self):
                 super().__init__()
-                prev_dim = model.embedding_size
+                prev_dim = model.output_size
                 self.head = nn.Sequential(
                     nn.Linear(prev_dim, prev_dim, bias=False),
                     nn.BatchNorm1d(prev_dim),
@@ -48,11 +50,8 @@ class SimSiamModule(BaseRetrievalModule):
                 x = self.head(x)
                 return x
 
-            def forward_features(self, x):
-                return self.forward(x)
-
-        super().__init__(_Model(), data, lr, debug)
-
+        self.lr = lr
+        self.model = _Model()
         self.predictor = nn.Sequential(
             nn.Linear(dim, pred_dim, bias=False),
             nn.BatchNorm1d(pred_dim),

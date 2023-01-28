@@ -1,4 +1,3 @@
-from itertools import chain
 from typing import TypeVar
 
 import pytorch_lightning as pl
@@ -6,16 +5,19 @@ import torch
 from pytorch_metric_learning.losses import ArcFaceLoss
 from torchtyping import TensorType
 
-from image_retrieval.modules.base_module import BaseRetrievalModule
+from image_retrieval.models import AbstractModel
+from image_retrieval.modules.base_module import BaseRetrievalMixin
 
 batch = TypeVar("batch")
 
 
-class ArcFaceModule(BaseRetrievalModule):
+class ArcFaceModule(BaseRetrievalMixin):
     def __init__(
-        self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False
+        self, model: AbstractModel, data: pl.LightningDataModule, lr=1e-3, debug=False
     ):
-        super().__init__(model, data, lr, debug)
+        super().__init__(data, debug)
+        self.lr = lr
+        self.model = model
         self.loss_fn = ArcFaceLoss(data.num_classes, model.output_size)
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
@@ -39,7 +41,7 @@ class ArcFaceModule(BaseRetrievalModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        features = self.model(x)
+        features = self(x)
         loss = self.loss_fn(features, y)
 
         self.log("val_loss", loss)
@@ -52,6 +54,4 @@ class ArcFaceModule(BaseRetrievalModule):
         pass
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(
-            chain(self.model.parameters(), self.loss_fn.parameters()), lr=self.lr
-        )
+        return torch.optim.AdamW(self.parameters(), lr=self.lr)

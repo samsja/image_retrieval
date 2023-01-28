@@ -5,17 +5,19 @@ import torch
 from pytorch_metric_learning.losses import TripletMarginLoss
 from torchtyping import TensorType
 
-from image_retrieval.modules.base_module import BaseRetrievalModule
+from image_retrieval.modules.base_module import BaseRetrievalMixin
 
 batch = TypeVar("batch")
 
 
-class MetricLearningModule(BaseRetrievalModule):
+class MetricLearningModule(BaseRetrievalMixin):
     def __init__(
         self, model: torch.nn.Module, data: pl.LightningDataModule, lr=1e-3, debug=False
     ):
-        super().__init__(model, data, lr, debug)
+        super().__init__(data, debug)
+        self.model = model
         self.loss_fn = TripletMarginLoss()
+        self.lr = lr
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
         return self.model(x)
@@ -40,4 +42,4 @@ class MetricLearningModule(BaseRetrievalModule):
         pass
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.model.parameters(), lr=self.lr)
+        return torch.optim.AdamW(self.parameters(), lr=self.lr)

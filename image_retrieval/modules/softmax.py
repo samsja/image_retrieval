@@ -7,12 +7,12 @@ from torch import nn
 from torchtyping import TensorType
 
 from image_retrieval.models import AbstractModel
-from image_retrieval.modules.base_module import BaseRetrievalModule
+from image_retrieval.modules.base_module import BaseRetrievalMixin
 
 batch_size = TypeVar("batch_size")
 
 
-class SoftMaxModule(BaseRetrievalModule):
+class SoftMaxModule(BaseRetrievalMixin):
     def __init__(
         self,
         model: AbstractModel,
@@ -20,8 +20,9 @@ class SoftMaxModule(BaseRetrievalModule):
         lr=1e-3,
         debug=False,
     ):
-        super().__init__(model, data, lr, debug)
-
+        super().__init__(data, debug)
+        self.model = model
+        self.lr = lr
         self.fc = nn.Linear(model.output_size, data.num_classes)
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.acc_fn = torchmetrics.Accuracy()
