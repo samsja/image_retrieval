@@ -1,10 +1,12 @@
 # inspired by https://github.com/facebookresearch/simsiam/blob/main/simsiam/loader.py
 import random
-from typing import Callable, Tuple
+from typing import Callable
 
 from PIL import ImageFilter
 from timm.data import RandomResizedCropAndInterpolation
 from torchvision import transforms
+
+from image_retrieval.augmentation.abstract_augmentation import AbstractAugmentation
 
 
 class TwoCropsTransform:
@@ -35,21 +37,11 @@ MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
 
 
-def get_transforms(image_shape: Tuple[int, int], augmentation=True) -> Callable:
-    """get basic transformation
-    :param image_shape: shape of the image when resizing
-    :param augmentation: include augmentation
-    """
-    normalize = transforms.Normalize(mean=MEAN, std=STD)
+class SSLAugmentation(AbstractAugmentation):
+    def get_transform(self) -> Callable:
+        normalize = transforms.Normalize(mean=MEAN, std=STD)
 
-    resize = (
-        RandomResizedCropAndInterpolation(size=image_shape)
-        if augmentation
-        else transforms.Resize(image_shape)
-    )
-
-    augmentation_transform = (
-        [
+        augmentation_transform = [
             transforms.RandomApply(
                 [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8
             ),  # not strengthened
@@ -57,17 +49,27 @@ def get_transforms(image_shape: Tuple[int, int], augmentation=True) -> Callable:
             transforms.RandomApply([GaussianBlur([0.1, 2.0])], p=0.5),
             transforms.RandomHorizontalFlip(),
         ]
-        if augmentation
-        else []
-    )
 
-    all_transform = transforms.Compose(
-        [
-            resize,
-            *augmentation_transform,
-            transforms.ToTensor(),
-            normalize,
-        ]
-    )
+        all_transform = transforms.Compose(
+            [
+                RandomResizedCropAndInterpolation(size=self.image_shape),
+                *augmentation_transform,
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
 
-    return TwoCropsTransform(all_transform) if augmentation else all_transform
+        return TwoCropsTransform(all_transform)
+
+    def get_transform_val(self) -> Callable:
+        normalize = transforms.Normalize(mean=MEAN, std=STD)
+
+        all_transform = transforms.Compose(
+            [
+                transforms.Resize(self.image_shape),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+
+        return all_transform

@@ -8,7 +8,6 @@ from pytorch_lightning.loggers import WandbLogger
 from typer import Typer
 
 from image_retrieval.data import CIFAR100
-from image_retrieval.data.utils_ssl import get_transforms as get_transforms_ssl
 from image_retrieval.models import ConvNext
 
 app = Typer(pretty_exceptions_enable=False)
@@ -20,26 +19,30 @@ def train(
     batch_size: int = 32,
     num_workers: int = 4,
     module: str = "SoftMaxModule",
+    aug: str = "BasicAugmentation",
     data_path: str = "data_trash",
     checkpoint_path: str = "checkpoints",
     lr: float = 1e-3,
     convnext_size: str = "nano",
     patience: int = 10,
-    ssl: bool = False,
+    pretrained: bool = False,
     debug: bool = False,
 ):
+
+    augmentation = getattr(import_module("image_retrieval.augmentation"), aug)
 
     data = CIFAR100(
         root_path=data_path,
         batch_size=batch_size,
         num_workers=num_workers,
         debug=debug,
-        transform=get_transforms_ssl if ssl else None,
+        transform=augmentation,
     )
 
-    model = ConvNext(pretrained=not (debug), size=convnext_size)
+    model = ConvNext(pretrained=not debug and pretrained, size=convnext_size)
 
     module_class = getattr(import_module("image_retrieval.modules"), module)
+
     module = module_class(model, data, lr, debug=debug)
 
     callbacks = [

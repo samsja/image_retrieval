@@ -1,9 +1,10 @@
+from image_retrieval.augmentation import BasicAugmentation
 from image_retrieval.data import CIFAR100
 
 
 def test_cifar(data_path):
 
-    data = CIFAR100(root_path=data_path, debug=True)
+    data = CIFAR100(root_path=data_path, transform=BasicAugmentation, debug=True)
 
     data.setup()
 
