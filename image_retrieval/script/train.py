@@ -3,7 +3,8 @@ from importlib import import_module
 import pytorch_lightning as pl
 import wandb
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+
+# from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 from typer import Typer
 
@@ -23,7 +24,7 @@ def train(
     data_path: str = "data_trash",
     checkpoint_path: str = "checkpoints",
     lr: float = 1e-3,
-    patience: int = 10,
+    # patience: int = 10,
     pretrained: bool = False,
     debug: bool = False,
 ):
@@ -46,7 +47,8 @@ def train(
     module_ = module_class(model, data, lr, debug=debug)
 
     callbacks = [
-        EarlyStopping(monitor="val_loss", mode="min", patience=patience, strict=False),
+        # EarlyStopping(monitor="val_loss", mode="min",
+        # patience=patience, strict=False),
         ModelCheckpoint(dirpath=checkpoint_path),
     ]
 
