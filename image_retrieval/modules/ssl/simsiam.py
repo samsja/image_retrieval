@@ -1,4 +1,3 @@
-from itertools import chain
 from typing import TypeVar
 
 import pytorch_lightning as pl
@@ -22,47 +21,44 @@ class SimSiamModule(BaseRetrievalMixin):
         model: torch.nn.Module,
         data: pl.LightningDataModule,
         lr=1e-3,
-        pred_dim=512,
-        dim=1024,
+        dim=2048,
+        momentum=0.9,
+        weight_decay=5e-4,
         debug=False,
     ):
         super().__init__(data, debug)
 
-        class _Model(nn.Module):
-            def __init__(self):
-                super().__init__()
-                prev_dim = model.output_size
-                self.head = nn.Sequential(
-                    nn.Linear(prev_dim, prev_dim, bias=False),
-                    nn.BatchNorm1d(prev_dim),
-                    nn.ReLU(inplace=True),  # first layer
-                    nn.Linear(prev_dim, prev_dim, bias=False),
-                    nn.BatchNorm1d(prev_dim),
-                    nn.ReLU(inplace=True),  # second layer
-                    nn.Linear(prev_dim, dim),
-                    nn.BatchNorm1d(dim, affine=False),
-                )  # output layer
-
-                self.model = model
-
-            def forward(self, x):
-                x = self.model(x)
-                x = self.head(x)
-                return x
-
         self.lr = lr
-        self.model = _Model()
+        self.momentum = momentum
+        self.weight_decay = weight_decay
+
+        prev_dim = model.output_size
+        self.head = nn.Sequential(
+            nn.Linear(prev_dim, dim, bias=False),
+            nn.BatchNorm1d(dim),
+            nn.ReLU(inplace=True),  # first layer
+            nn.Linear(dim, dim, bias=False),
+            nn.BatchNorm1d(dim),
+            nn.ReLU(inplace=True),  # second layer
+            nn.Linear(dim, dim),
+            nn.BatchNorm1d(dim, affine=False),
+        )  # output layer
+
+        self.model = model
+
+        hidden_dim = int(dim / 4)
         self.predictor = nn.Sequential(
-            nn.Linear(dim, pred_dim, bias=False),
-            nn.BatchNorm1d(pred_dim),
+            nn.Linear(dim, hidden_dim, bias=False),
+            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(inplace=True),  # hidden layer
-            nn.Linear(pred_dim, dim),
+            nn.Linear(hidden_dim, dim),
         )  # output layer
 
         self.loss_fn = nn.CosineSimilarity(dim=1)
 
     def forward(self, x: TensorType["batch":...]) -> TensorType["batch":...]:
         x = self.model(x)
+        x = self.head(x)
         return x
 
     def training_step(self, batch, batch_idx):
@@ -87,14 +83,16 @@ class SimSiamModule(BaseRetrievalMixin):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        features = self.model(x)
+        features = self.forward(x)
         self.retrieval_metrics.validation_add_features(features, y)
 
     def test_step(self, batch, batch_idx):
         pass
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(
-            chain(self.model.parameters(), self.predictor.parameters()),
+        return torch.optim.SGD(
+            self.parameters(),
             lr=self.lr,
+            momentum=self.momentum,
+            weight_decay=self.weight_decay,
         )
