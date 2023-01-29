@@ -59,6 +59,7 @@ def train(
     wandb_logger.experiment.config["batch_size"] = batch_size
     wandb_logger.experiment.config["backbone"] = backbone
     wandb_logger.experiment.config["module"] = module
+    wandb_logger.experiment.config["augmentation"] = aug
 
     trainer_args = {
         "accelerator": "gpu",

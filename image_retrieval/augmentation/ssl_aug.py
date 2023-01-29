@@ -73,3 +73,34 @@ class SSLAugmentation(AbstractAugmentation):
         )
 
         return all_transform
+
+
+class SSLAugmentation2(AbstractAugmentation):
+    def get_transform(self) -> Callable:
+        train_transforms = transforms.Compose(
+            [
+                transforms.RandomResizedCrop(self.image_shape[0], scale=(0.2, 1.0)),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomApply(
+                    [transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)],  # not strengthened
+                    p=0.8,
+                ),
+                transforms.RandomGrayscale(p=0.2),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)
+                ),
+            ]
+        )
+
+        return TwoCropsTransform(train_transforms)
+
+    def get_transform_val(self) -> Callable:
+        return transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)
+                ),
+            ]
+        )
