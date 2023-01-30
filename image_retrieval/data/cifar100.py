@@ -3,6 +3,7 @@ from typing import Optional, Type
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
+from torchvision.datasets import CIFAR10 as CIFAR10torch
 from torchvision.datasets import CIFAR100 as CIFAR100torch
 
 from image_retrieval.augmentation import AbstractAugmentation
@@ -11,6 +12,9 @@ _IMAGE_SHAPE = (32, 32)
 
 
 class CIFAR100(pl.LightningDataModule):
+
+    _cifar_cls = CIFAR100torch
+
     def __init__(
         self,
         root_path: str,
@@ -31,14 +35,14 @@ class CIFAR100(pl.LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
 
-        self.train_dataset = CIFAR100torch(
+        self.train_dataset = self._cifar_cls(
             self.data_path,
             transform=self.transform.get_transform(),
             train=True,
             download=True,
         )
 
-        self.test_dataset = CIFAR100torch(
+        self.test_dataset = self._cifar_cls(
             self.data_path,
             transform=self.transform.get_transform_val(),
             train=False,
@@ -100,3 +104,12 @@ def _debug_dataset(max_len: int, origin_class):
             return max_len
 
     return _DebugDataset
+
+
+class CIFAR10(CIFAR100):
+
+    _cifar_cls = CIFAR10torch
+
+    @property
+    def num_classes(self) -> int:
+        return 10

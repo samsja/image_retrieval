@@ -8,8 +8,6 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 from typer import Typer
 
-from image_retrieval.data import CIFAR100
-
 app = Typer(pretty_exceptions_enable=False)
 
 
@@ -22,6 +20,7 @@ def train(
     aug: str = "BasicAugmentation",
     backbone: str = "ConvNextNano",
     data_path: str = "data_trash",
+    dataset: str = "CIFAR100",
     checkpoint_path: str = "checkpoints",
     lr: float = 1e-3,
     # patience: int = 10,
@@ -31,7 +30,8 @@ def train(
 
     augmentation = getattr(import_module("image_retrieval.augmentation"), aug)
 
-    data = CIFAR100(
+    data_cls = getattr(import_module("image_retrieval.data"), dataset)
+    data = data_cls(
         root_path=data_path,
         batch_size=batch_size,
         num_workers=num_workers,
@@ -62,6 +62,7 @@ def train(
     wandb_logger.experiment.config["backbone"] = backbone
     wandb_logger.experiment.config["module"] = module
     wandb_logger.experiment.config["augmentation"] = aug
+    wandb_logger.experiment.config["dataset"] = dataset
 
     trainer_args = {
         "accelerator": "gpu",
