@@ -1,7 +1,7 @@
 from importlib import import_module
 
 import pytorch_lightning as pl
-import wandb
+import wandb as wandb_lib
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 # from pytorch_lightning.callbacks.early_stopping import EarlyStopping
@@ -26,6 +26,7 @@ def train(
     # patience: int = 10,
     pretrained: bool = False,
     debug: bool = False,
+    no_wandb: bool = False,
 ):
 
     augmentation = getattr(import_module("image_retrieval.augmentation"), aug)
@@ -52,8 +53,8 @@ def train(
         ModelCheckpoint(dirpath=checkpoint_path),
     ]
 
-    if debug:
-        wandb.init(mode="disabled")
+    if debug or no_wandb:
+        wandb_lib.init(mode="disabled")
 
     wandb_logger = WandbLogger(project="image_retrieval", save_dir="lightning_logs")
 
