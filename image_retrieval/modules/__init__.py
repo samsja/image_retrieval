@@ -1,7 +1,7 @@
 from .arcface import ArcFaceModule
 from .metric_learning import MetricLearningModule
 from .softmax import SoftMaxModule
-from .ssl import SimpleCluster, SimSiamModule
+from .ssl import FastSiamModule, SimpleCluster, SimSiamModule
 
 __all__ = [
     "ArcFaceModule",
@@ -9,4 +9,5 @@ __all__ = [
     "SoftMaxModule",
     "SimSiamModule",
     "SimpleCluster",
+    "FastSiamModule",
 ]
