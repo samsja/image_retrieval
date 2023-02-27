@@ -25,6 +25,7 @@ def train(
     lr: float = 1e-3,
     # patience: int = 10,
     pretrained: bool = False,
+    gpus: int = 1,
     debug: bool = False,
     no_wandb: bool = False,
 ):
@@ -64,6 +65,7 @@ def train(
     wandb_logger.experiment.config["module"] = module
     wandb_logger.experiment.config["augmentation"] = aug
     wandb_logger.experiment.config["dataset"] = dataset
+    wandb_logger.experiment.config["gpus"] = gpus
 
     trainer_args = {
         "accelerator": "gpu",
@@ -72,6 +74,7 @@ def train(
         "precision": 16,
         "callbacks": callbacks,
         "logger": wandb_logger,
+        "gpus": gpus,
     }
 
     if debug:

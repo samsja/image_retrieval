@@ -9,6 +9,15 @@ _MEAN = [0.485, 0.456, 0.406]
 _STD = [0.229, 0.224, 0.225]
 
 
+class HelperResize:
+    def __init__(self, tfm: Callable, resize: Callable):
+        self.tfm = tfm
+        self.resize = resize
+
+    def __call__(self, x):
+        return self.tfm(self.resize(x))
+
+
 class BasicAugmentation(AbstractAugmentation):
     def get_transform(self) -> Callable:
         resize = RandomResizedCropAndInterpolation(size=self.image_shape)
@@ -17,7 +26,7 @@ class BasicAugmentation(AbstractAugmentation):
             hparams={},
         )
 
-        transform = torchvision.transforms.Lambda(lambda x: tfm(resize(x)))
+        transform = torchvision.transforms.Lambda(HelperResize(tfm, resize))
 
         all_transform = [
             transform,
