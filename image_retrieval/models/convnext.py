@@ -14,10 +14,10 @@ F = TypeVar("F")
 
 
 class ConvNext(nn.Module, AbstractModel):
-    def __init__(self, size="nano", pretrained=False, *args, **kwargs):
+    def __init__(self, name="convnext_nano", pretrained=False, *args, **kwargs):
         super().__init__()
         self.model = create_model(
-            f"convnext_{size}", num_classes=0, *args, pretrained=pretrained, **kwargs
+            name, num_classes=0, *args, pretrained=pretrained, **kwargs
         )
 
     def forward(self, x: TensorType["batch", 3, "H", "W"]) -> TensorType["batch", "F"]:
@@ -30,4 +30,9 @@ class ConvNext(nn.Module, AbstractModel):
 
 class ConvNextNano(ConvNext):
     def __init__(self, pretrained=False, *args, **kwargs):
-        super().__init__("nano", pretrained, *args, **kwargs)
+        super().__init__("convnext_nano", pretrained, *args, **kwargs)
+
+
+class ConvNextBase(ConvNext):
+    def __init__(self, pretrained=False, *args, **kwargs):
+        super().__init__("convnext_base", pretrained, *args, **kwargs)
