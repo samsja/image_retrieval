@@ -45,18 +45,24 @@ class SimpleCluster(BaseRetrievalMixin):
         x, _ = batch
         target, anchor = x[0], x[1]
         self.log("fc_std", self.fc.weight.std(), prog_bar=True)
-        logits_target = F.log_softmax(
+        logits_target: object = F.log_softmax(
             self.fc(self.model(target)) / self.temp_target, dim=1
         ).detach()
         logits_anchor = F.log_softmax(
             self.fc(self.model(anchor)) / self.temp_anchor, dim=1
         )
 
-        me_max = logits_anchor.mean()  # regulizer to avoid prototypes to collapse
+        me_max = (
+            self.lambda_ * logits_anchor.mean()
+        )  # regularize to avoid prototypes to collapse
 
-        loss = self.loss_fn(logits_anchor, logits_target) - self.lambda_ * me_max
+        kl_div = self.loss_fn(logits_anchor, logits_target)
+
+        loss = kl_div - me_max
 
         self.log("train_loss", loss)
+        self.log("kl_div", kl_div)
+        self.log("me_max", me_max)
 
         return loss
 
