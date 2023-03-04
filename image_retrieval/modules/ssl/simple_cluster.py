@@ -20,7 +20,7 @@ class SimpleCluster(BaseRetrievalMixin):
         dim=1000,
         temp_target=0.025,
         temp_anchor=0.1,
-        lambda_=0,
+        lambda_=1,
         debug=False,
     ):
         super().__init__(data, debug)
