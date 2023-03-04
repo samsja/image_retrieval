@@ -20,7 +20,7 @@ class SimpleCluster(BaseRetrievalMixin):
         dim=1000,
         temp_target=0.025,
         temp_anchor=0.1,
-        lambda_=1,
+        lambda_=0,
         debug=False,
     ):
         super().__init__(data, debug)
@@ -51,7 +51,8 @@ class SimpleCluster(BaseRetrievalMixin):
         logits_anchor = F.log_softmax(
             self.fc(self.model(anchor)) / self.temp_anchor, dim=1
         )
-
+        class_std = logits_anchor.argmax(dim=1).float().std()
+        self.log("class_std", class_std)
         me_max = (
             self.lambda_ * logits_anchor.mean()
         )  # regularize to avoid prototypes to collapse
