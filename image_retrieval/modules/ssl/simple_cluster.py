@@ -12,11 +12,6 @@ batch_size = TypeVar("batch_size")
 
 
 class SimpleCluster(BaseRetrievalMixin):
-    """
-    SimSiam implementation (self supervised learning):
-    https://arxiv.org/abs/2011.10566
-    """
-
     def __init__(
         self,
         model: torch.nn.Module,
