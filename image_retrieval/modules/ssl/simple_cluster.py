@@ -32,7 +32,7 @@ class SimpleCluster(BaseRetrievalMixin):
         self.model = model
 
         prev_dim = model.output_size
-        self.fc = nn.Linear(prev_dim, dim + 1)
+        self.fc = nn.Linear(prev_dim, dim)
         self.loss_fn = torch.nn.KLDivLoss(log_target=True)
 
     def forward(self, x: TensorType["batch_size":...]) -> TensorType["batch_size":...]:

@@ -16,6 +16,7 @@ def test_full_training(module, data_path):
         ("SimSiamModule", "SSLAugmentation"),
         ("SimSiamModule", "SSLAugmentation2"),
         ("FastSiamModule", "FastSiamSSL"),
+        ("SimpleCluster", "SSLAugmentation2"),
     ],
 )
 def test_full_training_ssl(module, augmentation, data_path):
