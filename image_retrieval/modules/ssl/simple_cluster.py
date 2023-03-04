@@ -20,6 +20,7 @@ class SimpleCluster(BaseRetrievalMixin):
         dim=1000,
         temp_target=0.025,
         temp_anchor=0.1,
+        lambda_=1,
         debug=False,
     ):
         super().__init__(data, debug)
@@ -27,6 +28,7 @@ class SimpleCluster(BaseRetrievalMixin):
         self.lr = lr
         self.temp_target = temp_target
         self.temp_anchor = temp_anchor
+        self.lambda_ = lambda_
         self.dim = dim
 
         self.model = model
@@ -50,7 +52,9 @@ class SimpleCluster(BaseRetrievalMixin):
             self.fc(self.model(anchor)) / self.temp_anchor, dim=1
         )
 
-        loss = self.loss_fn(logits_anchor, logits_target)
+        me_max = logits_anchor.mean()  # regulizer to avoid prototypes to collapse
+
+        loss = self.loss_fn(logits_anchor, logits_target) - self.lambda_ * me_max
 
         self.log("train_loss", loss)
 
