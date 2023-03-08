@@ -1,6 +1,7 @@
 from importlib import import_module
 
 import pytorch_lightning as pl
+import torch
 import wandb as wandb_lib
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -9,6 +10,7 @@ from pytorch_lightning.loggers import WandbLogger
 from typer import Typer
 
 app = Typer(pretty_exceptions_enable=False)
+torch.set_float32_matmul_precision("medium")
 
 
 @app.command()
@@ -69,12 +71,11 @@ def train(
 
     trainer_args = {
         "accelerator": "gpu",
-        "devices": 1,
+        "devices": gpus,
         "max_epochs": epoch,
         "precision": 16,
         "callbacks": callbacks,
         "logger": wandb_logger,
-        "gpus": gpus,
     }
 
     if debug:
