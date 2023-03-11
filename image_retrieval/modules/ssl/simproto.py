@@ -17,15 +17,17 @@ class SimProto(BaseRetrievalMixin):
         model: torch.nn.Module,
         data: pl.LightningDataModule,
         lr=1e-3,
-        dim=100,
+        dim=20,
         temp_target=0.025,
         temp_anchor=0.1,
-        lambda_=1,
+        lambda_=0.1,
+        lr_fc=0.01,
         debug=False,
     ):
         super().__init__(data, debug)
 
         self.lr = lr
+        self.lr_fc = lr_fc
         self.temp_target = temp_target
         self.temp_anchor = temp_anchor
         self.lambda_ = lambda_
@@ -80,4 +82,9 @@ class SimProto(BaseRetrievalMixin):
         pass
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.parameters(), lr=self.lr)
+        return torch.optim.AdamW(
+            [
+                {"params": self.model.parameters(), "lr": self.lr},
+                {"params": self.fc.parameters(), "lr": self.lr_fc},
+            ]
+        )
