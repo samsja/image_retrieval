@@ -29,6 +29,7 @@ def train(
     pretrained: bool = False,
     gpus: int = 1,
     debug: bool = False,
+    project_name: str = "image_retrieval",
     no_wandb: bool = False,
 ):
 
@@ -59,7 +60,7 @@ def train(
     if debug or no_wandb:
         wandb_lib.init(mode="disabled")
 
-    wandb_logger = WandbLogger(project="image_retrieval", save_dir="lightning_logs")
+    wandb_logger = WandbLogger(project=project_name, save_dir="lightning_logs")
 
     wandb_logger.experiment.config["lr"] = lr
     wandb_logger.experiment.config["batch_size"] = batch_size
