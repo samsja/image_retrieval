@@ -1,5 +1,5 @@
 from .fastsiam import FastSiamModule
-from .simple_cluster import SimpleCluster
+from .simproto import SimProto
 from .simsiam import SimSiamModule
 
-__all__ = ["SimSiamModule", "SimpleCluster", "FastSiamModule"]
+__all__ = ["SimSiamModule", "SimProto", "FastSiamModule"]

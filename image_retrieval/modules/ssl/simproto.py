@@ -11,7 +11,7 @@ from image_retrieval.modules.base_module import BaseRetrievalMixin
 batch_size = TypeVar("batch_size")
 
 
-class SimpleCluster(BaseRetrievalMixin):
+class SimProto(BaseRetrievalMixin):
     def __init__(
         self,
         model: torch.nn.Module,
