@@ -17,9 +17,9 @@ class SimProto(BaseRetrievalMixin):
         model: torch.nn.Module,
         data: pl.LightningDataModule,
         lr=1e-3,
-        dim=100,
+        dim=10,
         temp_target=0.025,
-        temp_anchor=0.1,
+        temp_anchor=1,
         lambda_=1,
         debug=False,
     ):
@@ -42,14 +42,20 @@ class SimProto(BaseRetrievalMixin):
         return x
 
     def training_step(self, batch, batch_idx):
-        x, _ = batch
-        target, anchor = x[0], x[1]
+        x, y = batch
+
+        anchor = x[0] if isinstance(batch, list) else x
 
         self.log("fc_std", self.fc.weight.std(), prog_bar=True)
 
-        logits_target = F.log_softmax(
-            self.fc(self.model(target)) / self.temp_target, dim=1
-        ).detach()
+        # logits_target = F.log_softmax(
+        #     self.fc(self.model(target)) / self.temp_target, dim=1
+        # ).detach()
+        logits_target = (
+            torch.log(torch.clamp(F.one_hot(y, num_classes=self.dim), min=1e-10))
+            .detach()
+            .to(y.device)
+        )
 
         logits_anchor = F.log_softmax(
             self.fc(self.model(anchor)) / self.temp_anchor, dim=1
